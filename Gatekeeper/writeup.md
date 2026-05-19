@@ -14,33 +14,33 @@ Looking at the functions in IDA, there are some *interesting* functions in here,
 
 Ooookay.. let's try out this program first by launching `nc green-hill.picoctf.net <port>` instance.
 
-![[initial_nc.png]]
+![initial_nc](images/initial_nc.png)
 
 Okay, onto IDA!
 
 ----
 As I was debugging through the assembly, I noticed that when I was required to input, it was calling the `strlen()` function a few lines later. **Let's keep that in mind**.
 
-![[strlen.png]]
+![strlen](images/strlen.png)
 
 We see the first call to the function `is_valid_decimal()`, as from the name of  the function, this just checks if the input is a valid decimal I guess.
 
-![[is_valid_decimal.png]]
+![is_valid_decimal](images/is_valid_decimal.png)
 
 And then for some reason, it calls `atoi()`.. I forgot what that does so we'll proceed further.
 
-![[first_branches.png]]
+![first_branches](images/first_branches.png)
 
 Our input `1000` is being compared to a couple of hexes in here. Let's see what happens:
 
 1. It's being compared to 0x3e7 first. With `jg`, it means if our value is greater than 999. 1000 > 999 so we go to `loc_165E`.
 2. Now it's being compared to 0x270f (9999). Jump if less than or equal to, so 1000 <= 9999. So we jump to `loc_1675`.
 
-![[cmp.png]]
+![cmp](images/cmp.png)
 
 Oh now this is weird.. what's up with 3? `rbp-0x34`'s value is 4. So jnz means we go to the next location which is..
 
-![[access_deny.png]]
+![access_deny](images/access_deny.png)
 
 **ACCESS DENIED**. Hmm, what's up with that 3?
 
@@ -99,13 +99,13 @@ Going back to the upper branches, there was a function named `is_valid_hex()`. L
 
 Yeah I don't understand this LOL. But let us focus on the fact that this focus accepts hex numbers. For some reason, I remembered the ominous "3" we encountered on the final `cmp` instruction that brought us to the denial of access, and then at the same time, I also remembered the `strlen()` function we encountered awhile ago. Hmm, nothing still makes sense, let's go through the decompiler:
 
-![[get_flag.png]]
+![get_flag](images/get_flag.png)
 
 Yeah.. a variable `v5` is being used to store the value of `strlen(s)` with s being the place our input (1000) is stored before. So.. it looks like it is indeed checking if the input is a hexadecimal.
 
 ..oh fucking wait, what is 1000 in hexadecimal? 
 
-![[Pasted image 20260519170524.png]]
+![Pasted image 20260519170524](images/Pasted%20image%2020260519170524.png)
 
 3E8. If we put this in `s`, then `strlen(s)` gets called, we get 3! Then if that's the case, any hexes that is 3 in length but is 999 > n <= 9999 will basically work. 
 
@@ -186,3 +186,4 @@ Access granted: }af57128f_999_TG_xeh_tigid_3{FTCocip
 ```
 
 Reverse, and get the flag.
+
